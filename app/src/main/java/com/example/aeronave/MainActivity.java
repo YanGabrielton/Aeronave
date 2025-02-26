@@ -21,10 +21,11 @@ public class MainActivity extends AppCompatActivity {
 
     // Controle de estados
     boolean isLigado = false;         // para facilitar se está ligada
-    boolean isSubindo = false;        //segue a mesma logica do isLigado
+    boolean isSubindo = false;        // define se está subindo ou descendo
     boolean isChecklistFeito = false; // para verificar se o checklist foi feito
     boolean isAutorizado = false;    // para verificar se foi autorizado
-    int voando=0;
+    boolean isAutorizadoDescer = false;    // para verificar se foi autorizado
+    int voando = 0;                   // altura atual
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         checklist = findViewById(R.id.checklist);
         progressBar = findViewById(R.id.progressBar);
 
-        //Logica do botão de ligar e desligar em um botão ao inves de utilizar dois bottão separados
+        // Lógica do botão de ligar/desligar
         btLigar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,15 +48,17 @@ public class MainActivity extends AppCompatActivity {
                     btLigar.setText("Ligar");
                     isLigado = false;
                     showToast("Aeronave desligada");
+                    checkAllConditions();
                 } else {
                     btLigar.setText("Desligar");
                     isLigado = true;
                     showToast("Aeronave ligada");
+                    checkAllConditions();
                 }
-
             }
         });
-        //Checklist
+
+        // Checklist
         checklist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,56 +68,66 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Autorização para decolar
+        // Autorização para decolar
         autorizarDecolar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isAutorizado = true;
                 showToast("Autorizado a decolar");
-
+                checkAllConditions();
             }
         });
 
-        //Autorização para pousar
+        // Autorização para pousar
         autorizarPouso.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isAutorizadoDescer = true;
                 Toast.makeText(getApplicationContext(), "Autorizado Pouso", LENGTH_LONG).show();
             }
         });
+
+        // Lógica do botão de subida e descida
         btSubir.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                result.setText("Decolando");
+                // Se a aeronave está ligada, checklist feito e autorizado
+                if (isLigado && isChecklistFeito && isAutorizado) {
+                    // Se está subindo, aumente a altura
+                    if (!isSubindo) {
+                        isSubindo = true; // começa a subir
+                        result.setText("Decolando");
+                        voando = 40; // Subindo diretamente para 40 mil pés
+                        result.setText(voando + " mil pés");
 
-                if (voando <=40){
-                 for (voando = 0; voando <=40; ){
-                     result.setText(voando+10+"mil pés");
-                 }
-
-                } else if (voando == 40) {
-                    result.setText(voando-40+"mil pés");
+                    }
+                    // Se já está subindo, faz a descida
+                    else {
+                        isSubindo = false; // começa a descer
+                        result.setText("Descendo");
+                        voando = 0; // Desce diretamente para 0 pés
+                        result.setText(voando + " Você Pousou");
+                    }
+                } else {
+                    showToast("Não é possível decolar ou pousar. Verifique as condições.");
                 }
             }
         });
-
     }
 
-
+    // Método para verificar as condições para a aeronave estar pronta
     private void checkAllConditions() {
         if (isLigado && isChecklistFeito && isAutorizado) {
-
             progressBar.getProgressDrawable().setColorFilter(Color.parseColor("#008000"), android.graphics.PorterDuff.Mode.SRC_IN);
             progressBar.setProgress(100);
             showToast("Aeronave pronta para decolar!");
         } else {
-
             progressBar.getProgressDrawable().setColorFilter(Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
-            progressBar.setProgress(0); //
+            progressBar.setProgress(0);
         }
     }
 
-
+    // Método para mostrar mensagens de Toast
     private void showToast(String message) {
         Toast.makeText(this, message, LENGTH_SHORT).show();
     }
